@@ -1,9 +1,9 @@
 ---
 name: wasp-deploy
-description: Deploy a UOMI WASM agent to the UOMI network. Covers uploading WASM to IPFS and minting the agent as an ERC721 NFT on-chain via a MetaMask-compatible browser UI. Use when a developer is ready to publish their agent.
+description: Deploy a UOMI WASM agent to the UOMI network. Covers building the final WASM and minting the agent as an ERC721 NFT on-chain. Use when a developer is ready to publish their agent.
 argument-hint: [network: testnet|mainnet]
 disable-model-invocation: true
-allowed-tools: Read Write Bash(npm run build*) Bash(ls host/src/*.wasm*) Bash(cat uomi.config.json)
+allowed-tools: Read Write Bash(npm run build*) Bash(ls host/src/*.wasm*) Bash(cat uomi.config.json) Bash(node serve-deploy*)
 ---
 
 # Deploy a UOMI Agent to the Network
@@ -14,28 +14,28 @@ Target network: **$ARGUMENTS** (default: testnet)
 
 ## Overview
 
-Deploying a UOMI agent is a two-step process:
-1. **Upload WASM to IPFS** — get a Content ID (CID)
-2. **Mint agent NFT** — register the CID on-chain via `safeMint()`
+Deploying a UOMI agent has two steps:
+1. **Build the final WASM**
+2. **Mint the agent NFT** via a local `deploy.html` page
 
-**Exactly what happens:**
-- The developer uploads the WASM to IPFS via Pinata (CLI or API) and gets a CID
-- They open a local HTML page in their browser, fill in the agent metadata and CID
-- They click "Mint" — MetaMask (or any injected wallet) pops up showing the transaction details
-- They confirm in MetaMask — the transaction is sent and signed by their wallet
-- The page shows the resulting `tokenId` — the agent's permanent on-chain ID
-- No private keys are ever typed or stored anywhere
+**Exactly what happens — zero manual steps:**
+1. Claude writes `deploy.html` and `serve-deploy.js`, then runs the server
+2. The browser opens on `http://localhost:3333`
+3. The developer clicks **Connect Wallet** — MetaMask connects and signs an auth message (no cost, just identity verification)
+4. They select `host/src/agent_template.wasm`, fill in the metadata, click **Deploy**
+5. The page uploads the WASM to `https://backend.uomi.ai/api/upload/wasm` using the auth token
+6. MetaMask shows the `safeMint` transaction (costs **100 UOMI**)
+7. They confirm — the page shows the `tokenId`
 
 ---
 
 ## Step 1 — Build the final WASM
 
-Make sure you're using **model 1** (UOMI network model) in `lib.rs` before deploying:
+Make sure `lib.rs` uses **model 1** before deploying:
 ```rust
 let response = utils::call_ai_service(1, request);
 ```
 
-Build and verify:
 ```bash
 npm run build
 ls -lh host/src/agent_template.wasm
@@ -43,25 +43,9 @@ ls -lh host/src/agent_template.wasm
 
 ---
 
-## Step 2 — Upload WASM to IPFS
+## Step 2 — Write deploy.html
 
-Pin the WASM on IPFS using Pinata:
-
-```bash
-# With curl + Pinata API
-curl -X POST https://api.pinata.cloud/pinning/pinFileToIPFS \
-  -H "Authorization: Bearer <YOUR_PINATA_JWT>" \
-  -F "file=@host/src/agent_template.wasm" \
-  | python3 -m json.tool
-```
-
-Copy the `IpfsHash` from the response — this is your CID.
-
----
-
-## Step 3 — Create the mint UI
-
-Create `deploy.html` in the project root:
+Write this to the project root:
 
 ```html
 <!DOCTYPE html>
@@ -71,23 +55,30 @@ Create `deploy.html` in the project root:
   <title>Deploy UOMI Agent</title>
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.umd.min.js"></script>
   <style>
-    body { font-family: monospace; max-width: 600px; margin: 40px auto; padding: 0 20px; }
-    input, textarea { width: 100%; margin: 4px 0 12px; padding: 6px; box-sizing: border-box; }
-    button { padding: 10px 20px; cursor: pointer; }
-    #status { margin-top: 20px; white-space: pre-wrap; }
+    body { font-family: monospace; max-width: 640px; margin: 40px auto; padding: 0 20px; background: #0f0f0f; color: #e0e0e0; }
+    h2 { color: #fff; }
+    label { display: block; margin-top: 12px; font-size: 12px; color: #aaa; }
+    input, textarea { width: 100%; padding: 8px; box-sizing: border-box; background: #1a1a1a; border: 1px solid #333; color: #e0e0e0; margin-top: 4px; font-family: monospace; }
+    button { margin-top: 16px; padding: 12px 24px; background: #6c3de0; color: #fff; border: none; cursor: pointer; font-size: 14px; margin-right: 8px; }
+    button:disabled { background: #444; cursor: not-allowed; }
+    #wallet-status { margin-top: 12px; font-size: 12px; color: #aaa; }
+    #log { margin-top: 20px; background: #1a1a1a; padding: 12px; white-space: pre-wrap; font-size: 12px; min-height: 60px; border: 1px solid #333; }
   </style>
 </head>
 <body>
   <h2>Deploy UOMI Agent</h2>
 
-  <label>Agent Name</label>
+  <button id="connectBtn" onclick="connectWallet()">Connect Wallet</button>
+  <div id="wallet-status">Not connected</div>
+
+  <label>WASM File</label>
+  <input id="wasmFile" type="file" accept=".wasm" />
+
+  <label>Name</label>
   <input id="name" value="My UOMI Agent" />
 
   <label>Description</label>
   <input id="description" value="A UOMI agent" />
-
-  <label>WASM CID (from IPFS)</label>
-  <input id="cid" placeholder="bafkrei..." />
 
   <label>Input Schema (JSON)</label>
   <textarea id="inputSchema" rows="2">{"type":"array","items":{"role":"string","content":"string"}}</textarea>
@@ -98,42 +89,47 @@ Create `deploy.html` in the project root:
   <label>Tags (comma-separated)</label>
   <input id="tags" value="chat,ai" />
 
+  <label>Price in UOMI for callers (usually 0)</label>
+  <input id="price" type="number" value="0" step="0.001" />
+
   <label>Min Validators</label>
   <input id="minValidators" type="number" value="1" />
 
   <label>Min Blocks</label>
   <input id="minBlocks" type="number" value="10" />
 
-  <button onclick="mint()">Connect wallet & Mint</button>
+  <button id="deployBtn" onclick="deploy()" disabled>Deploy (100 UOMI)</button>
 
-  <div id="status"></div>
+  <div id="log">Connect your wallet to start.</div>
 
   <script>
     const CONTRACT = '0xDb8434F12f21a678F749cb34E6CE0c168776461c';
+    const CHAIN_ID = 4386;
     const RPC = 'https://rpc.testnet.uomi.network';
-    const CHAIN_ID = 4386; // UOMI testnet
 
     const ABI = [{
-      type: 'function',
+      inputs: [{
+        components: [
+          { internalType: 'string',   name: 'name',          type: 'string'   },
+          { internalType: 'string',   name: 'description',   type: 'string'   },
+          { internalType: 'string',   name: 'inputSchema',   type: 'string'   },
+          { internalType: 'string',   name: 'outputSchema',  type: 'string'   },
+          { internalType: 'string[]', name: 'tags',          type: 'string[]' },
+          { internalType: 'uint256',  name: 'price',         type: 'uint256'  },
+          { internalType: 'uint256',  name: 'minValidators', type: 'uint256'  },
+          { internalType: 'uint256',  name: 'minBlocks',     type: 'uint256'  },
+          { internalType: 'string',   name: 'agentCID',      type: 'string'   },
+        ],
+        internalType: 'struct UomiAgent.Agent', name: 'agent', type: 'tuple'
+      }, {
+        internalType: 'address', name: 'to', type: 'address'
+      }],
       name: 'safeMint',
-      inputs: [
-        { name: 'agent', type: 'tuple', components: [
-          { name: 'name',           type: 'string' },
-          { name: 'description',    type: 'string' },
-          { name: 'inputSchema',    type: 'string' },
-          { name: 'outputSchema',   type: 'string' },
-          { name: 'tags',           type: 'string' },
-          { name: 'price',          type: 'uint256' },
-          { name: 'minValidators',  type: 'uint256' },
-          { name: 'minBlocks',      type: 'uint256' },
-          { name: 'agentCid',       type: 'string' },
-        ]},
-        { name: 'to', type: 'address' }
-      ],
-      stateMutability: 'payable'
+      outputs: [],
+      stateMutability: 'payable',
+      type: 'function'
     }, {
-      type: 'event',
-      name: 'Transfer',
+      type: 'event', name: 'Transfer',
       inputs: [
         { name: 'from',    type: 'address', indexed: true },
         { name: 'to',      type: 'address', indexed: true },
@@ -141,15 +137,17 @@ Create `deploy.html` in the project root:
       ]
     }];
 
-    function log(msg) {
-      document.getElementById('status').textContent += msg + '\n';
-    }
+    let authToken = null;
+    let connectedAddress = null;
 
-    async function mint() {
-      document.getElementById('status').textContent = '';
+    const log = msg => { document.getElementById('log').textContent += '\n' + msg; };
+
+    async function connectWallet() {
+      const btn = document.getElementById('connectBtn');
+      btn.disabled = true;
+      document.getElementById('log').textContent = '';
       try {
-        if (!window.ethereum) throw new Error('No wallet detected. Install MetaMask.');
-
+        if (!window.ethereum) throw new Error('MetaMask not found');
         const provider = new ethers.BrowserProvider(window.ethereum);
         await provider.send('eth_requestAccounts', []);
 
@@ -162,24 +160,92 @@ Create `deploy.html` in the project root:
         }
 
         const signer = await provider.getSigner();
-        const address = await signer.getAddress();
+        connectedAddress = await signer.getAddress();
+
+        log('Fetching auth nonce...');
+        const nonceRes = await fetch(`https://backend.uomi.ai/api/auth/nonce?address=${connectedAddress}`);
+        const { nonce, timestamp } = await nonceRes.json();
+
+        const message = `Welcome to UOMI Network\n\nI authorize this wallet to access the UOMI Network Dashboard and interact with AI Agents on the Layer 1 chain.\n\nThis signature is only used for authentication and will not trigger any blockchain transaction or incur any costs.\n\nDomain: dashboard.uomi.ai\nWallet address: ${connectedAddress}\nNonce: ${nonce}\nTimestamp: ${timestamp}`;
+
+        log('Sign the auth message in MetaMask (no cost)...');
+        const signature = await signer.signMessage(message);
+
+        const authRes = await fetch('https://backend.uomi.ai/api/auth/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address: connectedAddress, signature, nonce }),
+        });
+        if (!authRes.ok) throw new Error('Authentication failed');
+        const { token } = await authRes.json();
+        authToken = token;
+
+        document.getElementById('wallet-status').textContent = `Connected: ${connectedAddress}`;
+        document.getElementById('deployBtn').disabled = false;
+        btn.textContent = 'Reconnect';
+        log('✅ Authenticated. Ready to deploy.');
+      } catch (e) {
+        log('❌ ' + (e.reason ?? e.message));
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function deploy() {
+      const btn = document.getElementById('deployBtn');
+      btn.disabled = true;
+      document.getElementById('log').textContent = '';
+      try {
+        if (!authToken) throw new Error('Connect wallet first');
+
+        const fileInput = document.getElementById('wasmFile');
+        if (!fileInput.files.length) throw new Error('Select a .wasm file');
+        const file = fileInput.files[0];
+
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
         const contract = new ethers.Contract(CONTRACT, ABI, signer);
+
+        log('Checking balance...');
+        const balance = await provider.getBalance(connectedAddress);
+        const required = ethers.parseEther('100');
+        if (balance < required) {
+          throw new Error(`Insufficient balance: ${ethers.formatEther(balance)} UOMI (need 100)`);
+        }
+        log(`Balance: ${ethers.formatEther(balance)} UOMI ✓`);
+
+        log('Uploading WASM...');
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('name', document.getElementById('name').value);
+
+        const uploadRes = await fetch('https://backend.uomi.ai/api/upload/wasm', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${authToken}` },
+          body: formData,
+        });
+        if (!uploadRes.ok) {
+          const err = await uploadRes.json().catch(() => ({}));
+          throw new Error(err.error || `Upload failed: ${uploadRes.status}`);
+        }
+        const { cid } = await uploadRes.json();
+        log(`CID: ${cid}`);
 
         const agent = {
           name:          document.getElementById('name').value,
           description:   document.getElementById('description').value,
           inputSchema:   document.getElementById('inputSchema').value,
           outputSchema:  document.getElementById('outputSchema').value,
-          tags:          document.getElementById('tags').value,
-          price:         0n,
+          tags:          document.getElementById('tags').value.split(',').map(t => t.trim()),
+          price:         ethers.parseEther(document.getElementById('price').value || '0'),
           minValidators: BigInt(document.getElementById('minValidators').value),
           minBlocks:     BigInt(document.getElementById('minBlocks').value),
-          agentCid:      document.getElementById('cid').value,
+          agentCID:      cid,
         };
 
-        log('Sending transaction — check your wallet...');
-        const tx = await contract.safeMint(agent, address, {
-          value: ethers.parseEther('10')
+        log('Approve the safeMint transaction in MetaMask (100 UOMI)...');
+        const tx = await contract.safeMint(agent, connectedAddress, {
+          value: ethers.parseEther('100')
         });
 
         log('Waiting for confirmation...');
@@ -189,12 +255,14 @@ Create `deploy.html` in the project root:
           .map(l => { try { return contract.interface.parseLog(l); } catch { return null; } })
           .find(e => e?.name === 'Transfer');
 
-        const tokenId = transferEvent?.args?.tokenId?.toString() ?? 'unknown';
+        const tokenId = transferEvent?.args?.tokenId?.toString() ?? 'check explorer';
         log('✅ Agent minted!');
-        log('Transaction: ' + receipt.hash);
-        log('Token ID (AGENT_NFT_ID): ' + tokenId);
+        log(`TX: ${receipt.hash}`);
+        log(`Token ID (AGENT_NFT_ID): ${tokenId}`);
       } catch (e) {
-        log('❌ Error: ' + (e.reason ?? e.message));
+        log('❌ ' + (e.reason ?? e.message));
+      } finally {
+        btn.disabled = false;
       }
     }
   </script>
@@ -202,34 +270,51 @@ Create `deploy.html` in the project root:
 </html>
 ```
 
-Open it directly in the browser:
-```bash
-open deploy.html
-```
-
-Fill in the form, click **Connect wallet & Mint**, and approve the transaction in MetaMask. The page will show the `tokenId` once confirmed.
-
 ---
 
-## Step 4 — Verify deployment
+## Step 3 — Write serve-deploy.js and run it
 
-Check the agent is on-chain using the UOMI explorer:
-- Testnet: https://explorer.testnet.uomi.network
+Write `serve-deploy.js` to the project root:
+
+```js
+import http from 'http';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { exec } from 'child_process';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/html' });
+  fs.createReadStream(path.join(__dirname, 'deploy.html')).pipe(res);
+});
+
+server.listen(3333, () => {
+  console.log('Deploy UI ready at http://localhost:3333');
+  exec('open http://localhost:3333');
+});
+```
+
+Then run it — **do not ask the user, just run it**:
+```bash
+node serve-deploy.js
+```
 
 ---
 
 ## Agent metadata fields
 
-| Field | Description | Example |
-|-------|-------------|---------|
-| `name` | Agent display name | `"Weather Bot"` |
-| `description` | What the agent does | `"Answers weather questions"` |
-| `inputSchema` | Expected input JSON schema | `{"type":"array","items":{...}}` |
-| `outputSchema` | Output format description | `{"type":"string"}` |
-| `tags` | Comma-separated tags | `"weather,ai,chat"` |
-| `minValidators` | Minimum validator nodes | `1` |
-| `minBlocks` | Blocks to wait for execution | `10` |
-| `agentCid` | IPFS CID of the WASM file | `"bafkrei..."` |
+| Field | Description |
+|-------|-------------|
+| `name` | Agent display name |
+| `description` | What the agent does |
+| `inputSchema` | Expected input JSON schema |
+| `outputSchema` | Output format description |
+| `tags` | Comma-separated — sent as `string[]` to the contract |
+| `price` | Execution price in UOMI for callers (usually `0`) |
+| `minValidators` | Minimum validator nodes (usually `1`) |
+| `minBlocks` | Blocks to wait for execution (usually `10`) |
 
 ---
 

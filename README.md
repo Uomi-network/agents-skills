@@ -23,9 +23,9 @@ A collection of [Claude Code](https://claude.ai/code) skills for building, testi
 ### Desktop (Claude Code app)
 
 1. Open **Customize → Skills** in the left sidebar
-2. Click **+** next to "Personal plugins"
-3. Enter `Uomi-network/uomi-skills` and click **Sync**
-4. Browse the skills and click **Install**
+2. Click **+** next to "Personal plugins" → **Add marketplace**
+3. Enter `Uomi-network/agents-skills`
+4. Browse the skills and enable the ones you want
 
 ### CLI
 

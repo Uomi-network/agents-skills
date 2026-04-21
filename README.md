@@ -31,7 +31,7 @@ A collection of [Claude Code](https://claude.ai/code) skills for building, testi
 
 ```bash
 claude plugin marketplace add Uomi-network/agents-skills
-claude plugin install wasp@uomi-skills
+claude plugin install wasp@agents-skills
 ```
 
 Restart the session after installing.

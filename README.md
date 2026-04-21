@@ -24,14 +24,14 @@ A collection of [Claude Code](https://claude.ai/code) skills for building, testi
 
 1. Open **Customize → Skills** in the left sidebar
 2. Click **+** next to "Personal plugins"
-3. Enter `Uomi-network/agents-skills` and click **Sync**
+3. Enter `Uomi-network/uomi-skills` and click **Sync**
 4. Browse the skills and click **Install**
 
 ### CLI
 
 ```bash
-claude plugin marketplace add Uomi-network/agents-skills
-claude plugin install wasp@agents-skills
+claude plugin marketplace add Uomi-network/uomi-skills
+claude plugin install wasp@uomi-skills
 ```
 
 Restart the session after installing.

@@ -71,6 +71,16 @@ Write this to the project root:
   <button id="connectBtn" onclick="connectWallet()">Connect Wallet</button>
   <div id="wallet-status">Not connected</div>
 
+  <div style="margin-top:16px">
+    <label style="display:inline;margin-right:16px"><input type="radio" name="mode" value="deploy" checked onchange="setMode(this.value)"> New deploy (100 UOMI)</label>
+    <label style="display:inline"><input type="radio" name="mode" value="update" onchange="setMode(this.value)"> Update existing (gas only)</label>
+  </div>
+
+  <div id="tokenIdRow" style="display:none">
+    <label>Token ID to update</label>
+    <input id="tokenId" placeholder="42" />
+  </div>
+
   <label>WASM File</label>
   <input id="wasmFile" type="file" accept=".wasm" />
 
@@ -107,38 +117,48 @@ Write this to the project root:
     const CHAIN_ID = 4386;
     const RPC = 'https://rpc.testnet.uomi.network';
 
-    const ABI = [{
-      inputs: [{
-        components: [
-          { internalType: 'string',   name: 'name',          type: 'string'   },
-          { internalType: 'string',   name: 'description',   type: 'string'   },
-          { internalType: 'string',   name: 'inputSchema',   type: 'string'   },
-          { internalType: 'string',   name: 'outputSchema',  type: 'string'   },
-          { internalType: 'string[]', name: 'tags',          type: 'string[]' },
-          { internalType: 'uint256',  name: 'price',         type: 'uint256'  },
-          { internalType: 'uint256',  name: 'minValidators', type: 'uint256'  },
-          { internalType: 'uint256',  name: 'minBlocks',     type: 'uint256'  },
-          { internalType: 'string',   name: 'agentCID',      type: 'string'   },
-        ],
-        internalType: 'struct UomiAgent.Agent', name: 'agent', type: 'tuple'
-      }, {
-        internalType: 'address', name: 'to', type: 'address'
-      }],
-      name: 'safeMint',
-      outputs: [],
-      stateMutability: 'payable',
-      type: 'function'
-    }, {
-      type: 'event', name: 'Transfer',
-      inputs: [
-        { name: 'from',    type: 'address', indexed: true },
-        { name: 'to',      type: 'address', indexed: true },
-        { name: 'tokenId', type: 'uint256', indexed: true },
-      ]
-    }];
+    const AGENT_COMPONENTS = [
+      { internalType: 'string',   name: 'name',             type: 'string'   },
+      { internalType: 'string',   name: 'description',      type: 'string'   },
+      { internalType: 'string',   name: 'inputSchema',      type: 'string'   },
+      { internalType: 'string',   name: 'outputSchema',     type: 'string'   },
+      { internalType: 'string[]', name: 'tags',             type: 'string[]' },
+      { internalType: 'uint256',  name: 'price',            type: 'uint256'  },
+      { internalType: 'uint256',  name: 'minValidatiors',   type: 'uint256'  }, // typo in contract
+      { internalType: 'uint256',  name: 'minBlocks',        type: 'uint256'  },
+      { internalType: 'string',   name: 'agentCID',         type: 'string'   },
+    ];
+
+    const ABI = [
+      {
+        inputs: [{ components: AGENT_COMPONENTS, internalType: 'struct UomiAgent.Agent', name: 'agent', type: 'tuple' },
+                 { internalType: 'address', name: 'to', type: 'address' }],
+        name: 'safeMint', outputs: [], stateMutability: 'payable', type: 'function'
+      },
+      {
+        inputs: [{ internalType: 'uint256', name: 'tokenId', type: 'uint256' },
+                 { components: AGENT_COMPONENTS, internalType: 'struct UomiAgent.Agent', name: 'agent', type: 'tuple' }],
+        name: 'updateAgent', outputs: [], stateMutability: 'nonpayable', type: 'function'
+      },
+      {
+        type: 'event', name: 'Transfer',
+        inputs: [
+          { name: 'from',    type: 'address', indexed: true },
+          { name: 'to',      type: 'address', indexed: true },
+          { name: 'tokenId', type: 'uint256', indexed: true },
+        ]
+      }
+    ];
 
     let authToken = null;
     let connectedAddress = null;
+    let currentMode = 'deploy';
+
+    function setMode(mode) {
+      currentMode = mode;
+      document.getElementById('tokenIdRow').style.display = mode === 'update' ? 'block' : 'none';
+      document.getElementById('deployBtn').textContent = mode === 'update' ? 'Update (gas only)' : 'Deploy (100 UOMI)';
+    }
 
     const log = msg => { document.getElementById('log').textContent += '\n' + msg; };
 
@@ -232,33 +252,45 @@ Write this to the project root:
         log(`CID: ${cid}`);
 
         const agent = {
-          name:          document.getElementById('name').value,
-          description:   document.getElementById('description').value,
-          inputSchema:   document.getElementById('inputSchema').value,
-          outputSchema:  document.getElementById('outputSchema').value,
-          tags:          document.getElementById('tags').value.split(',').map(t => t.trim()),
-          price:         ethers.parseEther(document.getElementById('price').value || '0'),
-          minValidators: BigInt(document.getElementById('minValidators').value),
-          minBlocks:     BigInt(document.getElementById('minBlocks').value),
-          agentCID:      cid,
+          name:           document.getElementById('name').value,
+          description:    document.getElementById('description').value,
+          inputSchema:    document.getElementById('inputSchema').value,
+          outputSchema:   document.getElementById('outputSchema').value,
+          tags:           document.getElementById('tags').value.split(',').map(t => t.trim()),
+          price:          ethers.parseEther(document.getElementById('price').value || '0'),
+          minValidatiors: BigInt(document.getElementById('minValidators').value), // typo in contract
+          minBlocks:      BigInt(document.getElementById('minBlocks').value),
+          agentCID:       cid,
         };
 
-        log('Approve the safeMint transaction in MetaMask (100 UOMI)...');
-        const tx = await contract.safeMint(agent, connectedAddress, {
-          value: ethers.parseEther('100')
-        });
+        let tx;
+        if (currentMode === 'update') {
+          const tokenId = document.getElementById('tokenId').value.trim();
+          if (!tokenId) throw new Error('Token ID required for update');
+          log(`Updating agent #${tokenId} — approve in MetaMask (gas only)...`);
+          tx = await contract.updateAgent(BigInt(tokenId), agent);
+        } else {
+          log('Approve the safeMint transaction in MetaMask (100 UOMI)...');
+          tx = await contract.safeMint(agent, connectedAddress, {
+            value: ethers.parseEther('100')
+          });
+        }
 
         log('Waiting for confirmation...');
         const receipt = await tx.wait();
 
-        const transferEvent = receipt.logs
-          .map(l => { try { return contract.interface.parseLog(l); } catch { return null; } })
-          .find(e => e?.name === 'Transfer');
-
-        const tokenId = transferEvent?.args?.tokenId?.toString() ?? 'check explorer';
-        log('✅ Agent minted!');
-        log(`TX: ${receipt.hash}`);
-        log(`Token ID (AGENT_NFT_ID): ${tokenId}`);
+        if (currentMode === 'update') {
+          log('✅ Agent updated!');
+          log(`TX: ${receipt.hash}`);
+        } else {
+          const transferEvent = receipt.logs
+            .map(l => { try { return contract.interface.parseLog(l); } catch { return null; } })
+            .find(e => e?.name === 'Transfer');
+          const tokenId = transferEvent?.args?.tokenId?.toString() ?? 'check explorer';
+          log('✅ Agent minted!');
+          log(`TX: ${receipt.hash}`);
+          log(`Token ID (AGENT_NFT_ID): ${tokenId}`);
+        }
       } catch (e) {
         log('❌ ' + (e.reason ?? e.message));
       } finally {

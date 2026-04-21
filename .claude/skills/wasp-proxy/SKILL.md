@@ -284,39 +284,70 @@ curl -X POST http://localhost:3000/ask \
 
 ---
 
-## Step 5 — Deploy to production
+## Step 5 — Security: never commit secrets
 
-### VPS with PM2
+Before touching git or deploying anywhere, do this first.
 
+**`.gitignore`** — add to the backend root:
+```
+.env
+node_modules/
+```
+
+**Never put API keys or private keys in code.** Always use environment variables:
+```js
+// ❌ never
+const sdk = new UomiWeb2ProxySdk('sk-abc123', 'https://...');
+
+// ✅ always
+const sdk = new UomiWeb2ProxySdk(process.env.PROXY_API_KEY, process.env.PROXY_URL);
+```
+
+Check you haven't accidentally committed secrets:
 ```bash
-npm install -g pm2
-pm2 start server.js --name agent-backend
-pm2 save && pm2 startup
+git log --all --full-history -- "**/.env"   # should return nothing
+git grep -i "api_key\|private_key\|secret"  # review any matches
 ```
 
-### Docker
+---
 
-```dockerfile
-FROM node:20-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --production
-COPY . .
-EXPOSE 3000
-CMD ["node", "server.js"]
+## Step 6 — Push to GitHub
+
+Initialize the repo and push:
+```bash
+cd backend
+git init
+git add .
+git commit -m "initial backend"
+gh repo create <project-name>-backend --private --source=. --push
 ```
 
-### Nginx (if streaming is needed)
+Or push to an existing repo — the backend can live in a `backend/` subdirectory of the main project repo.
 
-```nginx
-location / {
-    proxy_pass http://localhost:3000;
-    proxy_http_version 1.1;
-    proxy_set_header Connection '';
-    proxy_buffering off;   # required for SSE streaming
-    proxy_cache off;
-}
-```
+---
+
+## Step 7 — Deploy to Railway (free)
+
+Railway is the recommended free host — Node.js deploys with zero config, no spin-down on the free tier, and environment variables are set via their dashboard.
+
+1. Go to [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub repo**
+2. Select the backend repo (or the `backend/` subdirectory)
+3. Railway auto-detects Node.js and runs `npm start` — make sure `package.json` has:
+   ```json
+   "scripts": { "start": "node server.js" }
+   ```
+4. Go to **Variables** tab and add:
+   ```
+   PORT=3000
+   PROXY_URL=https://turing-a-w2p.uomi.ai
+   PROXY_API_KEY=<your key>
+   AGENT_NFT_ID=<tokenId>
+   ```
+5. Railway gives you a public URL like `https://your-backend.up.railway.app`
+
+**Alternatives if Railway doesn't fit:**
+- **Render** — free tier (spins down after 15min inactivity, cold start ~30s)
+- **Fly.io** — free tier, more control, requires `fly.toml` config
 
 ---
 

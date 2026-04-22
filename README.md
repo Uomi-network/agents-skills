@@ -30,8 +30,8 @@ A collection of [Claude Code](https://claude.ai/code) skills for building, testi
 ### CLI
 
 ```bash
-claude plugin marketplace add Uomi-network/uomi-skills
-claude plugin install wasp@uomi-skills
+claude plugin marketplace add Uomi-network/agents-skills
+claude plugin install wasp@uomi-tools
 ```
 
 Restart the session after installing.

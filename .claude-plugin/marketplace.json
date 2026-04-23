@@ -11,7 +11,7 @@
       "author": { "name": "UOMI Network" },
       "skills": ["./"],
       "strict": false,
-      "version": "0.0.1"
+      "version": "0.0.2"
     },
     {
       "name": "wasp-create",

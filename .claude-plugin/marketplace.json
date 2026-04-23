@@ -10,7 +10,8 @@
       "description": "Orchestrator for building a complete UOMI agent end-to-end. Guides through scaffold → Rust logic → test → build → deploy → backend.",
       "author": { "name": "UOMI Network" },
       "skills": ["./"],
-      "strict": false
+      "strict": false,
+      "version": "0.0.1"
     },
     {
       "name": "wasp-create",

@@ -20,7 +20,8 @@
       "description": "Scaffold a new UOMI agent project using the official template.",
       "author": { "name": "UOMI Network" },
       "skills": ["./"],
-      "strict": false
+      "strict": false,
+      "version": "0.0.2"
     },
     {
       "name": "wasp-agent",
@@ -28,7 +29,8 @@
       "description": "Write or modify the Rust WASM agent logic (lib.rs). Covers chat, structured I/O, RAG, multi-step patterns.",
       "author": { "name": "UOMI Network" },
       "skills": ["./"],
-      "strict": false
+      "strict": false,
+      "version": "0.0.2"
     },
     {
       "name": "wasp-build",
@@ -36,7 +38,8 @@
       "description": "Compile the Rust agent to WASM and troubleshoot build errors.",
       "author": { "name": "UOMI Network" },
       "skills": ["./"],
-      "strict": false
+      "strict": false,
+      "version": "0.0.2"
     },
     {
       "name": "wasp-dev",
@@ -44,7 +47,8 @@
       "description": "Test the agent locally with an interactive console or structured input files.",
       "author": { "name": "UOMI Network" },
       "skills": ["./"],
-      "strict": false
+      "strict": false, 
+      "version": "0.0.2"
     },
     {
       "name": "wasp-deploy",
@@ -52,7 +56,8 @@
       "description": "Deploy the WASM on-chain: IPFS upload and NFT mint via MetaMask UI. Supports new deploy and update of existing agent.",
       "author": { "name": "UOMI Network" },
       "skills": ["./"],
-      "strict": false
+      "strict": false,
+      "version": "0.0.2"
     },
     {
       "name": "wasp-proxy",
@@ -60,7 +65,8 @@
       "description": "Build and deploy the Node.js backend that calls the on-chain agent via UomiWeb2ProxySdk.",
       "author": { "name": "UOMI Network" },
       "skills": ["./"],
-      "strict": false
+      "strict": false,
+      "version": "0.0.2"
     },
     {
       "name": "wasp-call",
@@ -68,7 +74,8 @@
       "description": "Call an on-chain UOMI agent and read its output.",
       "author": { "name": "UOMI Network" },
       "skills": ["./"],
-      "strict": false
+      "strict": false,
+      "version": "0.0.2"
     },
     {
       "name": "wasp-debug",
@@ -76,7 +83,8 @@
       "description": "Diagnose and fix errors across the full UOMI agent stack — Rust compilation, WASM runtime, LLM API, on-chain execution.",
       "author": { "name": "UOMI Network" },
       "skills": ["./"],
-      "strict": false
+      "strict": false,
+      "version": "0.0.2"
     }
   ]
 }

@@ -1,7 +1,7 @@
 ---
 name: wasp-create
 description: Scaffold a new UOMI agent project using WASP. Use when a developer wants to create a new UOMI agent, start a new agent project, or set up a WASM/Rust agent for the UOMI network.
-argument-hint: [project-name] [destination-path]
+argument-hint: "[project-name] [destination-path]"
 allowed-tools: Bash(git clone*) Bash(mv *) Bash(cp -r *) Bash(ls*) Bash(mkdir*) Bash(npm install) Bash(chmod*) Bash(rustup target list*) Bash(rustup target add*) Bash(node --version) Bash(rustc --version) Bash(cargo --version)
 ---
 

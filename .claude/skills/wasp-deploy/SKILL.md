@@ -1,8 +1,7 @@
 ---
 name: wasp-deploy
 description: Deploy a UOMI WASM agent to the UOMI network. Covers building the final WASM and minting the agent as an ERC721 NFT on-chain. Use when a developer is ready to publish their agent.
-argument-hint: [network: testnet|mainnet]
-disable-model-invocation: true
+argument-hint: "[network: testnet|mainnet]"
 allowed-tools: Read Write Bash(npm run build*) Bash(ls host/src/*.wasm*) Bash(cat uomi.config.json) Bash(node serve-deploy*)
 ---
 

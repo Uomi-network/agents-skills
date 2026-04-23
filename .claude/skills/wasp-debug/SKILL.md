@@ -1,8 +1,7 @@
 ---
 name: wasp-debug
 description: Debug a UOMI WASM agent. Diagnose and fix errors across the full stack — Rust compilation, WASM runtime panics, LLM API failures, host configuration, and on-chain execution errors.
-argument-hint: [error message or symptom]
-when_to_use: Trigger when the developer reports an error, unexpected output, build failure, panic, API error, empty output, or on-chain execution failure in a UOMI agent.
+argument-hint: "[error message or symptom]"
 allowed-tools: Read Edit Bash(cat*) Bash(ls*) Bash(cargo build*) Bash(npm run build*) Bash(npm start*) Bash(rustc --version) Bash(rustup target list*)
 ---
 

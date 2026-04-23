@@ -1,8 +1,7 @@
 ---
 name: wasp-call
 description: Call a deployed UOMI agent on-chain and retrieve its output. Use when a developer wants to invoke an agent by its NFT ID, send input data, monitor execution, and read the result.
-argument-hint: [nft-id] [input-message]
-disable-model-invocation: true
+argument-hint: "[nft-id] [input-message]"
 allowed-tools: Bash(node*) Bash(npm install web3*) Bash(cat*)
 ---
 

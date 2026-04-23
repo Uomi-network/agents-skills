@@ -1,8 +1,7 @@
 ---
 name: wasp-agent
 description: Help write, understand, or modify the Rust logic of a UOMI WASM agent. Use when a developer wants to build a specific type of agent, customize lib.rs, use UOMI host functions, or implement patterns like RAG, multi-step reasoning, or structured I/O.
-argument-hint: [what the agent should do]
-when_to_use: Trigger when the user asks to write an agent, customize lib.rs, use utils functions, add agent logic, implement a chat bot, RAG agent, multi-step agent, or any Rust WASM agent for UOMI.
+argument-hint: "[what the agent should do]"
 allowed-tools: Read Write Edit Bash(cat*) Bash(ls*) Bash(cargo test*) Bash(cargo build*)
 ---
 

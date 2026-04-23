@@ -1,8 +1,7 @@
 ---
 name: wasp
 description: Orchestrator for building a complete UOMI agent end-to-end. Guides through the full workflow — scaffold project, write Rust logic, test, build, and optionally deploy on-chain and set up the backend proxy.
-argument-hint: [what the agent should do]
-disable-model-invocation: true
+argument-hint: "[what the agent should do]"
 ---
 
 # UOMI Agent — Full Workflow Orchestrator

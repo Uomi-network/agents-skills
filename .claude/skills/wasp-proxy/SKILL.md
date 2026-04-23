@@ -1,7 +1,7 @@
 ---
 name: wasp-proxy
 description: Build and deploy the backend component of a UOMI agent project. Every agent has two parts — the Rust WASM on-chain logic, and a backend server that uses UomiWeb2ProxySdk to invoke it. Use when a developer needs to create, configure, or deploy this backend layer.
-argument-hint: [what API the backend should expose]
+argument-hint: "[what API the backend should expose]"
 allowed-tools: Read Write Edit Bash(npm install*) Bash(npm init*) Bash(node --version*) Bash(ls*) Bash(cat*)
 ---
 

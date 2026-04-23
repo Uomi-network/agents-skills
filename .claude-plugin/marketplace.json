@@ -1,6 +1,6 @@
 {
   "name": "uomi-tools",
-  "version": "0.0.3",
+  "version": "1.0.4",
   "owner": {
     "name": "UOMI Network"
   },
@@ -8,83 +8,10 @@
     {
       "name": "wasp",
       "source": "./.claude/skills/wasp",
-      "description": "Orchestrator for building a complete UOMI agent end-to-end. Guides through scaffold → Rust logic → test → build → deploy → backend.",
+      "description": "Complete toolkit for building UOMI WASM agents. Includes scaffold, Rust logic, testing, building, deploying, and backend setup.",
       "author": { "name": "UOMI Network" },
-      "skills": ["./"],
       "strict": false,
-      "version": "0.0.2"
-    },
-    {
-      "name": "wasp-create",
-      "source": "./.claude/skills/wasp-create",
-      "description": "Scaffold a new UOMI agent project using the official template.",
-      "author": { "name": "UOMI Network" },
-      "skills": ["./"],
-      "strict": false,
-      "version": "0.0.2"
-    },
-    {
-      "name": "wasp-agent",
-      "source": "./.claude/skills/wasp-agent",
-      "description": "Write or modify the Rust WASM agent logic (lib.rs). Covers chat, structured I/O, RAG, multi-step patterns.",
-      "author": { "name": "UOMI Network" },
-      "skills": ["./"],
-      "strict": false,
-      "version": "0.0.2"
-    },
-    {
-      "name": "wasp-build",
-      "source": "./.claude/skills/wasp-build",
-      "description": "Compile the Rust agent to WASM and troubleshoot build errors.",
-      "author": { "name": "UOMI Network" },
-      "skills": ["./"],
-      "strict": false,
-      "version": "0.0.2"
-    },
-    {
-      "name": "wasp-dev",
-      "source": "./.claude/skills/wasp-dev",
-      "description": "Test the agent locally with an interactive console or structured input files.",
-      "author": { "name": "UOMI Network" },
-      "skills": ["./"],
-      "strict": false, 
-      "version": "0.0.2"
-    },
-    {
-      "name": "wasp-deploy",
-      "source": "./.claude/skills/wasp-deploy",
-      "description": "Deploy the WASM on-chain: IPFS upload and NFT mint via MetaMask UI. Supports new deploy and update of existing agent.",
-      "author": { "name": "UOMI Network" },
-      "skills": ["./"],
-      "strict": false,
-      "version": "0.0.2"
-    },
-    {
-      "name": "wasp-proxy",
-      "source": "./.claude/skills/wasp-proxy",
-      "description": "Build and deploy the Node.js backend that calls the on-chain agent via UomiWeb2ProxySdk.",
-      "author": { "name": "UOMI Network" },
-      "skills": ["./"],
-      "strict": false,
-      "version": "0.0.2"
-    },
-    {
-      "name": "wasp-call",
-      "source": "./.claude/skills/wasp-call",
-      "description": "Call an on-chain UOMI agent and read its output.",
-      "author": { "name": "UOMI Network" },
-      "skills": ["./"],
-      "strict": false,
-      "version": "0.0.2"
-    },
-    {
-      "name": "wasp-debug",
-      "source": "./.claude/skills/wasp-debug",
-      "description": "Diagnose and fix errors across the full UOMI agent stack — Rust compilation, WASM runtime, LLM API, on-chain execution.",
-      "author": { "name": "UOMI Network" },
-      "skills": ["./"],
-      "strict": false,
-      "version": "0.0.2"
+      "version": "1.0.1"
     }
   ]
 }

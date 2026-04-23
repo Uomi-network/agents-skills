@@ -6,15 +6,15 @@ A collection of [Claude Code](https://claude.ai/code) skills for building, testi
 
 | Skill | What it does |
 |-------|-------------|
-| `/wasp` | **Orchestrator** — guides you through the full agent lifecycle end-to-end |
-| `/wasp-create` | Scaffold a new UOMI agent project |
-| `/wasp-agent` | Write or modify the Rust agent logic (`lib.rs`) |
-| `/wasp-build` | Compile the Rust agent to WASM |
-| `/wasp-dev` | Test the agent locally with an interactive console |
-| `/wasp-deploy` | Deploy the WASM on-chain (IPFS upload + NFT mint via MetaMask) |
-| `/wasp-proxy` | Build and deploy the Node.js backend (Railway, Render, Fly.io) |
-| `/wasp-call` | Call an on-chain agent and read its output |
-| `/wasp-debug` | Diagnose errors across the full stack |
+| `/wasp:start` | **Orchestrator** — guides you through the full agent lifecycle end-to-end |
+| `/wasp:create` | Scaffold a new UOMI agent project |
+| `/wasp:agent` | Write or modify the Rust agent logic (`lib.rs`) |
+| `/wasp:build` | Compile the Rust agent to WASM |
+| `/wasp:dev` | Test the agent locally with an interactive console |
+| `/wasp:deploy` | Deploy the WASM on-chain (IPFS upload + NFT mint via MetaMask) |
+| `/wasp:proxy` | Build and deploy the Node.js backend (Railway, Render, Fly.io) |
+| `/wasp:call` | Call an on-chain agent and read its output |
+| `/wasp:debug` | Diagnose errors across the full stack |
 
 ---
 
@@ -38,7 +38,7 @@ Restart the session after installing.
 
 ### Verify
 
-Open any project in Claude Code and type `/wasp` — you should see the skill in the autocomplete.
+Open any project in Claude Code and type `/wasp:` — you should see all the skills in the autocomplete.
 
 ---
 
@@ -47,7 +47,7 @@ Open any project in Claude Code and type `/wasp` — you should see the skill in
 The easiest entry point is the orchestrator:
 
 ```
-/wasp build a grid trading bot
+/wasp:start build a grid trading bot
 ```
 
 Claude will ask what you want to build, guide you through scaffolding, writing the Rust logic, testing, and deploying — invoking the sub-skills automatically.
@@ -55,10 +55,10 @@ Claude will ask what you want to build, guide you through scaffolding, writing t
 You can also use skills individually:
 
 ```
-/wasp-create my-agent ~/projects
-/wasp-agent  
-/wasp-build
-/wasp-deploy
+/wasp:create my-agent ~/projects
+/wasp:agent  
+/wasp:build
+/wasp:deploy
 ```
 
 ---

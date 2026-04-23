@@ -1,0 +1,8 @@
+{
+  "name": "wasp",
+  "description": "Complete toolkit for building UOMI WASM agents. Includes scaffold, Rust logic, testing, building, deploying, and backend setup.",
+  "version": "1.0.1",
+  "author": {
+    "name": "UOMI Network"
+  }
+}
